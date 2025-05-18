@@ -35,8 +35,6 @@ class KChartWidget extends StatefulWidget {
   final bool isLine;
   final bool isTapShowInfoDialog; //是否开启单击显示详情数据
   final bool hideGrid;
-  @Deprecated('Use `translations` instead.')
-  final bool isChinese;
   final bool showNowPrice;
   final bool showInfoDialog;
   final bool materialInfoDialog; // Material风格的信息弹窗
@@ -74,7 +72,6 @@ class KChartWidget extends StatefulWidget {
     this.isLine = false,
     this.isTapShowInfoDialog = false,
     this.hideGrid = false,
-    @Deprecated('Use `translations` instead.') this.isChinese = false,
     this.showNowPrice = true,
     this.showInfoDialog = true,
     this.materialInfoDialog = true,
@@ -404,9 +401,7 @@ class _KChartWidgetState extends State<KChartWidget>
               itemExtent: 14.0,
               shrinkWrap: true,
               itemBuilder: (context, index) {
-                final translations = widget.isChinese
-                    ? kChartTranslations['zh_CN']!
-                    : widget.translations.of(context);
+                final translations = widget.translations.of(context);
 
                 return _buildItem(
                   infos[index],
