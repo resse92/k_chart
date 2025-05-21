@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:k_chart/chart_translations.dart';
+import 'package:k_chart/datafeed.dart';
 import 'package:k_chart/extension/map_ext.dart';
 import 'package:k_chart/flutter_k_chart.dart';
 
@@ -25,7 +26,8 @@ class TimeFormat {
 }
 
 class KChartWidget extends StatefulWidget {
-  final List<KLineEntity>? datas;
+  final String symbol;
+  final String interval;
   final MainState mainState;
   final bool volHidden;
   final SecondaryState secondaryState;
@@ -40,6 +42,7 @@ class KChartWidget extends StatefulWidget {
   final bool materialInfoDialog; // Material风格的信息弹窗
   final Map<String, ChartTranslations> translations;
   final List<String> timeFormat;
+  final DataFeed dataFeed;
 
   //当屏幕滚动到尽头会调用，真为拉到屏幕右侧尽头，假为拉到屏幕左侧尽头
   final Function(bool)? onLoadMore;
@@ -57,7 +60,9 @@ class KChartWidget extends StatefulWidget {
   final double xFrontPadding;
 
   KChartWidget(
-    this.datas,
+    this.dataFeed,
+    this.symbol,
+    this.interval,
     this.chartStyle,
     this.chartColors, {
     required this.isTrendLine,
@@ -96,6 +101,8 @@ class _KChartWidgetState extends State<KChartWidget>
   double mHeight = 0, mWidth = 0;
   AnimationController? _controller;
   Animation<double>? aniX;
+  List<KLineEntity> kLineData = [];
+  StreamSubscription<KLineEntity>? kLineSubscription;
 
   //For TrendLine
   List<TrendLine> lines = [];
@@ -104,7 +111,6 @@ class _KChartWidgetState extends State<KChartWidget>
   double mSelectY = 0.0;
   bool waitingForOtherPairofCords = false;
   bool enableCordRecord = false;
-
   double getMinScrollX() {
     return mScaleX;
   }
@@ -116,11 +122,22 @@ class _KChartWidgetState extends State<KChartWidget>
   void initState() {
     super.initState();
     mInfoWindowStream = StreamController<InfoWindowEntity?>();
+    _loadKLineData(widget.symbol, widget.interval);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant KChartWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.symbol != widget.symbol ||
+        oldWidget.interval != widget.interval) {
+      kLineSubscription?.cancel();
+      _loadKLineData(widget.symbol, widget.interval);
+    }
   }
 
   @override
@@ -132,7 +149,7 @@ class _KChartWidgetState extends State<KChartWidget>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.datas != null && widget.datas!.isEmpty) {
+    if (kLineData.isEmpty) {
       mScrollX = mSelectX = 0.0;
       mScaleX = 1.0;
     }
@@ -143,7 +160,7 @@ class _KChartWidgetState extends State<KChartWidget>
       xFrontPadding: widget.xFrontPadding,
       isTrendLine: widget.isTrendLine, //For TrendLine
       selectY: mSelectY, //For TrendLine
-      datas: widget.datas,
+      datas: kLineData,
       scaleX: mScaleX,
       scrollX: mScrollX,
       selectX: mSelectX,
@@ -427,4 +444,38 @@ class _KChartWidgetState extends State<KChartWidget>
       DateTime.fromMillisecondsSinceEpoch(
           date ?? DateTime.now().millisecondsSinceEpoch),
       widget.timeFormat);
+
+  void _loadKLineData(String symbol, String interval) async {
+    final symbolInfo = await widget.dataFeed.getSymbolInfo(symbol);
+    final periodParams = PeriodParams(
+      interval: interval,
+      from: DateTime.now().millisecondsSinceEpoch,
+      to: DateTime.now().add(Duration(minutes: 1)).millisecondsSinceEpoch ~/
+          1000,
+    );
+    final kLineData =
+        await widget.dataFeed.getKLineData(symbolInfo, periodParams);
+    setState(() {
+      this.kLineData = kLineData;
+    });
+
+    // kLineSubscription =
+    //     widget.dataFeed.subscribeKLineData(symbol, interval).listen((data) {
+    //   if (mounted) {
+    //     if (kLineData.isEmpty) {
+    //       setState(() {
+    //         this.kLineData.add(data);
+    //       });
+    //       return;
+    //     }
+    //     if (data.time < kLineData.last.time) {
+    //       return;
+    //     } else if (data.time == kLineData.last.time) {
+    //       this.kLineData.last = data;
+    //     } else {
+    //       this.kLineData.add(data);
+    //     }
+    //   }
+    // });
+  }
 }

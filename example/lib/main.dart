@@ -1,8 +1,8 @@
 import 'dart:convert';
 
+import 'package:example/datafeed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:k_chart/chart_translations.dart';
 import 'package:k_chart/flutter_k_chart.dart';
 
@@ -52,7 +52,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    getData('1day');
     rootBundle.loadString('assets/depth.json').then((result) {
       final parseJson = json.decode(result);
       final tick = parseJson['tick'] as Map<String, dynamic>;
@@ -102,7 +101,9 @@ class _MyHomePageState extends State<MyHomePage> {
             height: 450,
             width: double.infinity,
             child: KChartWidget(
-              datas,
+              CustomDataFeed(),
+              'BTCUSDT',
+              '1min',
               chartStyle,
               chartColors,
               isLine: isLine,
@@ -220,53 +221,5 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Colors.blue,
       ),
     );
-  }
-
-  void getData(String period) {
-    /*
-     * 可以翻墙使用方法1加载数据，不可以翻墙使用方法2加载数据，默认使用方法1加载最新数据
-     */
-    final Future<String> future = getChatDataFromInternet(period);
-    //final Future<String> future = getChatDataFromJson();
-    future.then((String result) {
-      solveChatData(result);
-    }).catchError((_) {
-      showLoading = false;
-      setState(() {});
-      print('### datas error $_');
-    });
-  }
-
-  //获取火币数据，需要翻墙
-  Future<String> getChatDataFromInternet(String? period) async {
-    var url =
-        'https://api.huobi.br.com/market/history/kline?period=${period ?? '1day'}&size=300&symbol=btcusdt';
-    late String result;
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      result = response.body;
-    } else {
-      print('Failed getting IP address');
-    }
-    return result;
-  }
-
-  // 如果你不能翻墙，可以使用这个方法加载数据
-  Future<String> getChatDataFromJson() async {
-    return rootBundle.loadString('assets/chatData.json');
-  }
-
-  void solveChatData(String result) {
-    final Map parseJson = json.decode(result) as Map<dynamic, dynamic>;
-    final list = parseJson['data'] as List<dynamic>;
-    datas = list
-        .map((item) => KLineEntity.fromJson(item as Map<String, dynamic>))
-        .toList()
-        .reversed
-        .toList()
-        .cast<KLineEntity>();
-    DataUtil.calculate(datas!);
-    showLoading = false;
-    setState(() {});
   }
 }

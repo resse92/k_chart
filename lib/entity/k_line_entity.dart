@@ -1,6 +1,7 @@
 import '../entity/k_entity.dart';
 
 class KLineEntity extends KEntity {
+  late int time;
   late double open;
   late double high;
   late double low;
@@ -9,7 +10,6 @@ class KLineEntity extends KEntity {
   late double? amount;
   double? change;
   double? ratio;
-  int? time;
 
   KLineEntity.fromCustom({
     this.amount,
@@ -30,11 +30,11 @@ class KLineEntity extends KEntity {
     close = json['close']?.toDouble() ?? 0;
     vol = json['vol']?.toDouble() ?? 0;
     amount = json['amount']?.toDouble();
-    int? tempTime = json['time']?.toInt();
+    int tempTime = json['time']?.toInt() ?? 0;
     //兼容火币数据
-    if (tempTime == null) {
+    if (tempTime == 0) {
       tempTime = json['id']?.toInt() ?? 0;
-      tempTime = tempTime! * 1000;
+      tempTime = tempTime * 1000;
     }
     time = tempTime;
     ratio = json['ratio']?.toDouble();
