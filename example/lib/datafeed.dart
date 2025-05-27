@@ -77,6 +77,7 @@ class CustomDataFeed extends DataFeed {
 
   // 如果你不能翻墙，可以使用这个方法加载数据
   Future<String> getChatDataFromJson() async {
+    await Future.delayed(Duration(seconds: 2));
     return rootBundle.loadString('assets/chatData.json');
   }
 

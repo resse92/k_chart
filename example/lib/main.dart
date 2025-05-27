@@ -32,7 +32,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<KLineEntity>? datas;
-  bool showLoading = true;
   MainState _mainState = MainState.MA;
   bool _volHidden = false;
   SecondaryState _secondaryState = SecondaryState.MACD;
@@ -124,12 +123,6 @@ class _MyHomePageState extends State<MyHomePage> {
               maDayList: [1, 100, 1000],
             ),
           ),
-          if (showLoading)
-            Container(
-                width: double.infinity,
-                height: 450,
-                alignment: Alignment.center,
-                child: const CircularProgressIndicator()),
         ]),
         buildButtons(),
         if (_bids != null && _asks != null)
