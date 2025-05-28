@@ -41,7 +41,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _showNowPrice = true;
   List<DepthEntity>? _bids, _asks;
   bool isChangeUI = false;
-  bool _isTrendLine = false;
   bool _priceLeft = true;
   VerticalTextAlignment _verticalTextAlignment = VerticalTextAlignment.left;
 
@@ -109,7 +108,6 @@ class _MyHomePageState extends State<MyHomePage> {
               onSecondaryTap: () {
                 print('Secondary Tap');
               },
-              isTrendLine: _isTrendLine,
               mainState: _mainState,
               volHidden: _volHidden,
               secondaryState: _secondaryState,
@@ -141,7 +139,6 @@ class _MyHomePageState extends State<MyHomePage> {
       children: <Widget>[
         button("Time Mode", onPressed: () => isLine = true),
         button("K Line Mode", onPressed: () => isLine = false),
-        button("TrendLine", onPressed: () => _isTrendLine = !_isTrendLine),
         button("Line:MA", onPressed: () => _mainState = MainState.MA),
         button("Line:BOLL", onPressed: () => _mainState = MainState.BOLL),
         button("Hide Line", onPressed: () => _mainState = MainState.NONE),
