@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:k_chart/chart_translations.dart';
 import 'package:k_chart/datafeed.dart';
 import 'package:k_chart/extension/map_ext.dart';
@@ -178,69 +179,94 @@ class _KChartWidgetState extends State<KChartWidget>
                 height: 450,
                 alignment: Alignment.center,
                 child: const CircularProgressIndicator())
-            : GestureDetector(
-                onTapUp: (details) {
-                  if (widget.onSecondaryTap != null &&
-                      _painter.isInSecondaryRect(details.localPosition)) {
-                    widget.onSecondaryTap!();
-                  }
+            : RawGestureDetector(
+                gestures: {
+                  TapGestureRecognizer: GestureRecognizerFactoryWithHandlers<
+                      TapGestureRecognizer>(
+                    () => TapGestureRecognizer()
+                      ..onTapUp = (details) {
+                        if (widget.onSecondaryTap != null &&
+                            _painter.isInSecondaryRect(details.localPosition)) {
+                          widget.onSecondaryTap!();
+                        }
 
-                  if (_painter.isInMainRect(details.localPosition)) {
-                    isOnTap = true;
-                    if (mSelectX != details.localPosition.dx &&
-                        widget.isTapShowInfoDialog) {
-                      mSelectX = details.localPosition.dx;
-                      notifyChanged();
-                    }
-                  }
-                },
-                onHorizontalDragDown: (details) {
-                  isOnTap = false;
-                  _stopAnimation();
-                  _onDragChanged(true);
-                },
-                onHorizontalDragUpdate: (details) {
-                  if (isScale || isLongPress) return;
-                  mScrollX = ((details.primaryDelta ?? 0) / mScaleX + mScrollX)
-                      .clamp(0.0, ChartPainter.maxScrollX)
-                      .toDouble();
-                  notifyChanged();
-                },
-                onHorizontalDragEnd: (DragEndDetails details) {
-                  var velocity = details.velocity.pixelsPerSecond.dx;
-                  _onFling(velocity);
-                },
-                onHorizontalDragCancel: () => _onDragChanged(false),
-                onScaleStart: (_) {
-                  isScale = true;
-                },
-                onScaleUpdate: (details) {
-                  if (isDrag || isLongPress) return;
-                  mScaleX = (_lastScale * details.scale).clamp(0.5, 2.2);
-                  notifyChanged();
-                },
-                onScaleEnd: (_) {
-                  isScale = false;
-                  _lastScale = mScaleX;
-                },
-                onLongPressStart: (details) {
-                  isOnTap = false;
-                  isLongPress = true;
-                  if (mSelectX != details.localPosition.dx) {
-                    mSelectX = details.localPosition.dx;
-                    notifyChanged();
-                  }
-                },
-                onLongPressMoveUpdate: (details) {
-                  if (mSelectX != details.localPosition.dx) {
-                    mSelectX = details.localPosition.dx;
-                    notifyChanged();
-                  }
-                },
-                onLongPressEnd: (details) {
-                  isLongPress = false;
-                  mInfoWindowStream?.sink.add(null);
-                  notifyChanged();
+                        if (_painter.isInMainRect(details.localPosition)) {
+                          isOnTap = true;
+                          if (mSelectX != details.localPosition.dx &&
+                              widget.isTapShowInfoDialog) {
+                            mSelectX = details.localPosition.dx;
+                            notifyChanged();
+                          }
+                        }
+                      },
+                    (instance) {},
+                  ),
+                  HorizontalDragGestureRecognizer:
+                      GestureRecognizerFactoryWithHandlers<
+                          HorizontalDragGestureRecognizer>(
+                    () => HorizontalDragGestureRecognizer()
+                      ..onDown = (details) {
+                        isOnTap = false;
+                        _stopAnimation();
+                        _onDragChanged(true);
+                      }
+                      ..onUpdate = (details) {
+                        if (isScale || isLongPress) return;
+                        mScrollX =
+                            ((details.primaryDelta ?? 0) / mScaleX + mScrollX)
+                                .clamp(0.0, ChartPainter.maxScrollX)
+                                .toDouble();
+                        notifyChanged();
+                      }
+                      ..onEnd = (details) {
+                        var velocity = details.velocity.pixelsPerSecond.dx;
+                        _onFling(velocity);
+                      }
+                      ..onCancel = () => _onDragChanged(false),
+                    (instance) {},
+                  ),
+                  ScaleGestureRecognizer: GestureRecognizerFactoryWithHandlers<
+                      ScaleGestureRecognizer>(
+                    () => ScaleGestureRecognizer()
+                      ..onStart = (_) {
+                        isScale = true;
+                      }
+                      ..onUpdate = (details) {
+                        if (isDrag || isLongPress) return;
+                        mScaleX = (_lastScale * details.scale).clamp(0.5, 2.2);
+                        notifyChanged();
+                      }
+                      ..onEnd = (_) {
+                        isScale = false;
+                        _lastScale = mScaleX;
+                      },
+                    (instance) {},
+                  ),
+                  LongPressGestureRecognizer:
+                      GestureRecognizerFactoryWithHandlers<
+                          LongPressGestureRecognizer>(
+                    () => LongPressGestureRecognizer()
+                      ..onLongPressStart = (details) {
+                        isOnTap = false;
+                        isLongPress = true;
+                        if (mSelectX != details.localPosition.dx) {
+                          mSelectX = details.localPosition.dx;
+                          notifyChanged();
+                        }
+                      }
+                      ..onLongPressMoveUpdate = (details) {
+                        if (mSelectX != details.localPosition.dx) {
+                          mSelectX = details.localPosition.dx;
+                          notifyChanged();
+                        }
+                      }
+                      ..onLongPressEnd = (details) {
+                        isLongPress = false;
+                        mInfoWindowStream?.sink.add(null);
+                        notifyChanged();
+                      },
+                    (instance) {},
+                  ),
                 },
                 child: Stack(
                   children: <Widget>[
