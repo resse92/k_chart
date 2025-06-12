@@ -70,6 +70,10 @@ DepthChart(_bids, _asks, chartColors) //Note: Datas must be an ordered list，
 
 ## TODO
  - [ ] change api to tradingview datafeed
+ - [ ] custom shape
+ - [ ] custom line
+ - [ ] custom price precision
+ - [ ] custom volume precision
  - [ ] fix pinch gesture
  - [ ] custom color
 
